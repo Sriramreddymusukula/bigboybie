@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Big Boy Bike Availability Portal</title>
+    <style>
+        /* Global Styles */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: Arial, sans-serif; 
+            color: #c0b1b1; 
+            background: url('duccati.avif') no-repeat center center fixed, #333;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .overlay { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(230, 186, 186, 0.038); 
+        }
+
+        .container {
+            position: relative; 
+            max-width: 600px;
+            width: 100%;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.9); 
+            color: #794b4be8;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            text-align: center;
+        }
+
+        h1 { font-size: 2rem; margin-bottom: 1.5rem; color: #0073e6; }
+        label { font-weight: bold; margin-top: 1rem; display: block; color: #333; }
+        select, input[type="text"], input[type="email"], input[type="phone"] {
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            width: 100%;
+            border: 1px solid #a57c7c;
+            border-radius: 4px;
+        }
+
+        .result, .booking-form { 
+            margin-top: 1.5rem; 
+            padding: 1rem; 
+            display: none; 
+            border-radius: 4px; 
+        }
+
+        .result { 
+            background: #ced9e3; 
+            border: 1px solid #b3daff; 
+            color: #0073e6; 
+        }
+
+        .booking-form { 
+            background: rgba(0, 123, 255, 0.1); 
+            border: 1px solid #0073e6; 
+        }
+
+        .bike-image {
+            max-width: 100%; 
+            max-height: 300px; 
+            margin-top: 1rem; 
+            border-radius: 8px; 
+        }
+
+        .showroom-info {
+            background-color: #f7f7f7;
+            border: 1px solid #ccc;
+            padding: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        button {
+            background-color: #0073e6;
+            color: white;
+            padding: 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        button:hover {
+            background-color: #005bb5;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+    <div class="container">
+        <h1>Big Boy Bike Availability Portal</h1>
+
+        <!-- Dropdown for selecting the bike brand -->
+        <label for="brand">Select the bike brand:</label>
+        <select id="brand" onchange="showModels()">
+            <option value="">--Select a brand--</option>
+            <option value="bmw">BMW</option>
+            <option value="royalenfield">Royal Enfield</option>
+            <option value="ktm">KTM</option>
+        </select>
+
+        <!-- Dropdown for selecting a bike model (hidden until a brand is selected) -->
+        <div id="model-section" style="display: none;">
+            <label for="model">Select the model:</label>
+            <select id="model" onchange="showDetails()"></select>
+        </div>
+
+        <!-- Bike details (appears when a model is selected) -->
+        <div id="details" class="result">
+            <h3>Bike Details</h3>
+            <img id="bike-image" class="bike-image" src="" alt="Bike Image" style="display:none;">
+            <p id="details-text"></p>
+            <p id="color-options"></p>
+            <p id="features"></p>
+            <button id="bookTestRideBtn" onclick="showBookingForm()">Book Test Ride</button>
+        </div>
+
+        <!-- Showroom Info (static info about the showroom) -->
+        <div id="showroom" class="showroom-info">
+            <h3>Visit Our Showroom in Hyderabad</h3>
+            <p>Location: Plot No. 123, MG Road, Hyderabad, Telangana</p>
+            <p>Contact: 123-456-7890</p>
+        </div>
+
+        <!-- Booking Form (hidden initially) -->
+        <div id="booking-section" class="booking-form">
+            <h3>Book a Test Ride</h3>
+            <form id="bookingForm" onsubmit="return submitBooking()">
+                <label for="customer-name">Name:</label>
+                <input type="text" id="customer-name" required placeholder="Enter your name" />
+                
+                <label for="customer-email">Email:</label>
+                <input type="email" id="customer-email" required placeholder="Enter your email" />
+                
+                <label for="customer-phone">Phone:</label>
+                <input type="phone" id="customer-phone" required placeholder="Enter your phone number" />
+                
+                <button type="submit">Book Test Ride</button>
+            </form>
+            <p id="responseMessage"></p>
+        </div>
+    </div>
+
+    <script>
+        // Data for the different models available for each brand
+        const modelsData = {
+            bmw: [
+                { name: "GS 1250", details: "Adventure motorcycle with a 1,254cc flat-twin engine, producing 136 HP. On-road price: ₹22,00,000.", image: "gs1250.jpeg", colors: ["Black", "White", "Red"], features: ["Adaptive Cruise Control", "Electronic Suspension Adjustment", "Keyless Ride"] },
+                { name: "S1000RR", details: "A powerful sportbike with a 999cc engine, offering 165 HP. On-road price: ₹23,75,000.", image: "s1000rr.jpeg", colors: ["Blue", "Black", "White"], features: ["Dynamic Traction Control", "Quickshifter", "Race-Ready Ergonomics"] },
+                { name: "G310 GS", details: "A beginner-friendly adventure bike with a 313cc engine. On-road price: ₹3,20,000.", image: "g310r.jpg", colors: ["Red", "White", "Black"], features: ["LED Headlights", "Adjustable Suspension", "Lightweight Design"] }
+            ],
+            royalenfield: [
+                { name: "GT650", details: "Café racer with a 648cc twin-cylinder engine. On-road price: ₹3,50,000.", image: "gt650.jpg", colors: ["Raven Black", "Ice Queen", "Mr. Clean"], features: ["Dual Channel ABS", "Pirelli Tyres", "Classic Cafe Racer Design"] },
+                { name: "Interceptor 650", details: "A retro-styled cruiser with a 648cc engine. On-road price: ₹3,20,000.", image: "interceptor.avif", colors: ["Orange Crush", "Black Magic", "Silver Spectre"], features: ["Chrome Detailing", "Twin Cylinder Engine", "Dual Exhaust"] },
+                { name: "Classic 350", details: "Iconic cruiser with a 349cc single-cylinder engine. On-road price: ₹2,15,000.", image: "classic350.jpg", colors: ["Stealth Black", "Chrome Red", "Gunmetal Grey"], features: ["Iconic Styling", "ABS with Dual Channel", "Dual Seat"] }
+            ],
+            ktm: [
+                { name: "Duke 390", details: "Naked street bike with a 373cc engine, producing 44 HP. On-road price: ₹3,10,000.", image: "duke390.jpg", colors: ["Orange", "Black", "White"], features: ["LED Lighting", "Supermoto Mode", "Quickshifter"] },
+                { name: "RC 390", details: "Sportbike with a 373cc engine, quick handling. On-road price: ₹3,20,000.", image: "rc390.jpg", colors: ["KTM Orange", "Black", "White"], features: ["Race-Tuned Suspension", "Quick Shifter", "Slipper Clutch"] },
+                { name: "Adventure 390", details: "Off-road bike with a 373cc engine. On-road price: ₹3,60,000.", image: "adv390.jpg", colors: ["Orange", "Black"], features: ["Off-Road Tyres", "Long Travel Suspension", "Adventure Riding Mode"] }
+            ]
+        };
+
+        // Function to show models based on the selected brand
+        function showModels() {
+            const brand = document.getElementById("brand").value.toLowerCase();
+            const modelSection = document.getElementById("model-section");
+            const modelSelect = document.getElementById("model");
+
+            modelSelect.innerHTML = '<option value="">--Select a model--</option>';
+            if (brand && modelsData[brand]) {
+                modelSection.style.display = "block";
+                modelsData[brand].forEach(model => {
+                    const option = document.createElement("option");
+                    option.value = model.name.toLowerCase().replace(/\s+/g, '');
+                    option.textContent = model.name;
+                    modelSelect.appendChild(option);
+                });
+            } else {
+                modelSection.style.display = "none";
+            }
+        }
+
+        // Function to show bike details based on the selected model
+        function showDetails() {
+            const brand = document.getElementById("brand").value.toLowerCase();
+            const model = document.getElementById("model").value.toLowerCase();
+            const detailsDiv = document.getElementById("details");
+            const detailsText = document.getElementById("details-text");
+            const bikeImage = document.getElementById("bike-image");
+            const colorOptions = document.getElementById("color-options");
+            const features = document.getElementById("features");
+
+            const selectedModel = modelsData[brand].find(m => m.name.toLowerCase().replace(/\s+/g, '') === model);
+
+            if (selectedModel) {
+                detailsText.textContent = selectedModel.details;
+                bikeImage.src = selectedModel.image;
+                bikeImage.alt = selectedModel.name;
+                bikeImage.style.display = "block";
+
+                colorOptions.textContent = `Colors Available: ${selectedModel.colors.join(", ")}`;
+                features.textContent = `Features: ${selectedModel.features.join(", ")}`;
+                detailsDiv.style.display = "block";
+            } else {
+                detailsDiv.style.display = "none";
+            }
+        }
+
+        // Function to show booking form after clicking "Book Test Ride"
+        function showBookingForm() {
+            document.getElementById("booking-section").style.display = "block";
+        }
+
+        // Function to handle booking form submission
+        function submitBooking() {
+            const name = document.getElementById("customer-name").value;
+            const email = document.getElementById("customer-email").value;
+            const phone = document.getElementById("customer-phone").value;
+
+            // Booking data to send to backend
+            const bookingData = {
+                name: name,
+                email: email,
+                phone: phone
+            };
+
+            // Send data to backend using Fetch API
+            fetch('http://localhost:5001/api/bookings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(bookingData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(`Thank you, ${name}! Your test ride booking has been received.`);
+                console.log('Booking Saved:', data);
+            })
+            .catch(error => {
+                alert('Error saving booking. Please try again.');
+                console.error('Error:', error);
+            });
+
+            return false; // Prevent actual form submission
+        }
+    </script>
+</body>
+</html>
